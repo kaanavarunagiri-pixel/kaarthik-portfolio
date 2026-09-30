@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback, createContext, useContext } from "react";
-import { useScroll, useSpring, MotionValue } from "framer-motion";
+import { useScroll, useSpring, useMotionValue, animate, MotionValue } from "framer-motion";
 
 interface ScrollyContextType {
   scrollYProgress: MotionValue<number>;
@@ -18,6 +18,8 @@ interface ScrollyCanvasProps {
 }
 
 const MOBILE_TARGETS = [0.0, 0.35, 0.65, 0.90];
+// Milestone keyframe indices to prioritize for mobile cards (frames 1, 63, 117, 162)
+const MILESTONE_FRAME_INDICES = [0, 62, 116, 161];
 
 export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
   totalFrames = 180,
@@ -25,26 +27,32 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
   const currentFrameRef = useRef<number>(0);
   const [loadedCount, setLoadedCount] = useState<number>(0);
   const [isReady, setIsReady] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const isMobileRef = useRef<boolean>(false);
   const [currentMobileStage, setCurrentMobileStage] = useState<number>(0);
   const currentMobileStageRef = useRef<number>(0);
-  const stageAtStartRef = useRef<number>(0);
 
   const touchStartY = useRef<number>(0);
   const touchStartX = useRef<number>(0);
-  const isTransitioningRef = useRef<boolean>(false);
+  const touchStartTime = useRef<number>(0);
+  const swipedInGestureRef = useRef<boolean>(false);
+  const mobileAnimRef = useRef<any>(null);
 
-  // Scroll tracking across container
+  // Dedicated discrete motion value for mobile 1-swipe transitions
+  const mobileProgress = useMotionValue<number>(0.0);
+
+  // Desktop continuous scroll tracking across 550vh
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  // Inertia spring smoothing for 60-120fps glide
+  // Desktop inertia spring smoothing for 60-120fps glide
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 110,
     damping: 26,
@@ -52,7 +60,10 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
     restDelta: 0.0001,
   });
 
-  // Object-fit: cover math on HTML5 canvas
+  // Active progress supplied to context (mobile discrete vs desktop continuous)
+  const activeProgress = isMobile ? mobileProgress : smoothProgress;
+
+  // Optimized object-fit: cover math with zero fillRect overdraw
   const drawImageCover = useCallback(
     (
       ctx: CanvasRenderingContext2D,
@@ -75,33 +86,28 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
       let offsetY = 0;
 
       if (canvasAspect > imgAspect) {
-        // Canvas is wider: scale to canvas width
         renderW = w;
         renderH = w / imgAspect;
         offsetY = (h - renderH) / 2;
       } else {
-        // Canvas is taller: scale to canvas height
         renderH = h;
         renderW = h * imgAspect;
         offsetX = (w - renderW) / 2;
       }
 
-      ctx.fillStyle = "#050505";
-      ctx.fillRect(0, 0, w, h);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, imgW, imgH, offsetX, offsetY, renderW, renderH);
     },
     []
   );
 
-  // Render a specific frame with nearest-frame fallback
+  // Render frame with nearest-frame fallback & cached 2D context
   const renderFrame = useCallback(
     (frameIndex: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const ctx = canvas.getContext("2d", { alpha: false });
+      const ctx = ctxRef.current || canvas.getContext("2d", { alpha: false });
       if (!ctx) return;
+      ctxRef.current = ctx;
 
       const clampedIndex = Math.max(0, Math.min(frameIndex, totalFrames - 1));
       currentFrameRef.current = clampedIndex;
@@ -129,34 +135,41 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
     [totalFrames, drawImageCover]
   );
 
-  // Responsive resize with devicePixelRatio scaling
+  // Responsive resize with mobile resolution & performance optimization
   const handleResize = useCallback(() => {
-    setIsMobile(window.innerWidth < 768);
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+    isMobileRef.current = mobile;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Use DPR 1 on mobile to prevent GPU fill-rate throttling; DPR up to 2 on desktop
+    const dpr = mobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
     const displayWidth = window.innerWidth;
     const displayHeight = window.innerHeight;
 
-    if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
-      canvas.width = displayWidth * dpr;
-      canvas.height = displayHeight * dpr;
+    const renderW = Math.round(displayWidth * dpr);
+    const renderH = Math.round(displayHeight * dpr);
+
+    if (canvas.width !== renderW || canvas.height !== renderH) {
+      canvas.width = renderW;
+      canvas.height = renderH;
       canvas.style.width = `${displayWidth}px`;
       canvas.style.height = `${displayHeight}px`;
 
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", { alpha: false });
       if (ctx) {
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
+        ctx.imageSmoothingQuality = mobile ? "medium" : "high";
+        ctxRef.current = ctx;
       }
     }
 
     renderFrame(currentFrameRef.current);
   }, [renderFrame]);
 
-  // Preload all 180 frames into memory
+  // Preload frames with milestone priority for instant mobile responsiveness
   useEffect(() => {
     imagesRef.current = new Array(totalFrames).fill(null);
     let loaded = 0;
@@ -166,7 +179,7 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
       return `/sequence/frame_${padded}.webp`;
     };
 
-    // Priority load: First frame for instant render
+    // Priority 1: Load First Frame immediately
     const firstImg = new Image();
     firstImg.src = getFramePath(0);
     firstImg.onload = () => {
@@ -177,15 +190,30 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
       handleResize();
       renderFrame(0);
 
-      // Progressively load all remaining frames
+      // Priority 2: Milestone card keyframes (frames 63, 117, 162)
+      MILESTONE_FRAME_INDICES.forEach((idx) => {
+        if (idx !== 0) {
+          const keyImg = new Image();
+          keyImg.src = getFramePath(idx);
+          keyImg.onload = () => {
+            imagesRef.current[idx] = keyImg;
+            loaded++;
+            setLoadedCount(loaded);
+          };
+        }
+      });
+
+      // Priority 3: Progressively load remaining frames in background
       for (let i = 1; i < totalFrames; i++) {
-        const img = new Image();
-        img.src = getFramePath(i);
-        img.onload = () => {
-          imagesRef.current[i] = img;
-          loaded++;
-          setLoadedCount(loaded);
-        };
+        if (!MILESTONE_FRAME_INDICES.includes(i)) {
+          const img = new Image();
+          img.src = getFramePath(i);
+          img.onload = () => {
+            imagesRef.current[i] = img;
+            loaded++;
+            setLoadedCount(loaded);
+          };
+        }
       }
     };
 
@@ -194,9 +222,9 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, [totalFrames, handleResize, renderFrame]);
 
-  // Hook frame updates to spring-smoothed scroll progress
+  // Render frame on activeProgress change (60fps animation)
   useEffect(() => {
-    const unsubscribe = smoothProgress.on("change", (latest) => {
+    const unsubscribe = activeProgress.on("change", (latest) => {
       const targetIndex = Math.min(
         totalFrames - 1,
         Math.floor(latest * totalFrames)
@@ -205,144 +233,117 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
     });
 
     return () => unsubscribe();
-  }, [smoothProgress, totalFrames, renderFrame]);
+  }, [activeProgress, totalFrames, renderFrame]);
 
-  // Programmatic scroll helper for mobile step transitions
-  const scrollToMobileStage = useCallback((stageIndex: number) => {
-    if (!containerRef.current) return;
-    const maxScroll = containerRef.current.offsetHeight - window.innerHeight;
-    if (maxScroll <= 0) return;
+  // Jump to mobile stage with snappy, hardware-accelerated Framer Motion animation
+  const goToMobileStage = useCallback(
+    (stageIndex: number) => {
+      if (stageIndex < 0) stageIndex = 0;
 
-    if (stageIndex >= MOBILE_TARGETS.length) {
-      // Exit hero section into capabilities/skills
-      const targetY = maxScroll + 50;
-      const lenis = (window as any).__lenis;
-      if (lenis) {
-        lenis.scrollTo(targetY, { duration: 0.85 });
-      } else {
-        window.scrollTo({ top: targetY, behavior: "smooth" });
+      if (stageIndex >= MOBILE_TARGETS.length) {
+        // Exit hero section into portfolio skills / rest of site
+        setCurrentMobileStage(3);
+        currentMobileStageRef.current = 3;
+        const lenis = (window as any).__lenis;
+        const nextSection = document.getElementById("portfolio-skills");
+        if (lenis && nextSection) {
+          lenis.scrollTo(nextSection, { duration: 0.85 });
+        } else if (nextSection) {
+          nextSection.scrollIntoView({ behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
+        }
+        return;
       }
-      return;
-    }
 
-    const targetProgress = MOBILE_TARGETS[Math.max(0, stageIndex)];
-    const targetY = maxScroll * targetProgress;
-    const lenis = (window as any).__lenis;
-    if (lenis) {
-      lenis.scrollTo(targetY, { duration: 0.85 });
-    } else {
-      window.scrollTo({ top: targetY, behavior: "smooth" });
-    }
-  }, []);
+      setCurrentMobileStage(stageIndex);
+      currentMobileStageRef.current = stageIndex;
 
-  // Track active mobile stage from scroll position
-  useEffect(() => {
-    if (!isMobile) return;
+      if (mobileAnimRef.current) {
+        mobileAnimRef.current.stop();
+      }
 
-    const updateStage = () => {
-      if (!containerRef.current) return;
-      const maxScroll = containerRef.current.offsetHeight - window.innerHeight;
-      if (maxScroll <= 0) return;
-      const p = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+      const targetP = MOBILE_TARGETS[stageIndex];
+      mobileAnimRef.current = animate(mobileProgress, targetP, {
+        duration: 0.42,
+        ease: [0.22, 1, 0.36, 1], // Ultra-snappy cubic bezier
+      });
+    },
+    [mobileProgress]
+  );
 
-      let stage = 0;
-      if (p < 0.20) stage = 0;
-      else if (p < 0.50) stage = 1;
-      else if (p < 0.80) stage = 2;
-      else stage = 3;
-
-      setCurrentMobileStage(stage);
-      currentMobileStageRef.current = stage;
-    };
-
-    window.addEventListener("scroll", updateStage, { passive: true });
-    updateStage();
-    return () => window.removeEventListener("scroll", updateStage);
-  }, [isMobile]);
-
-  // Touch swipe listener for mobile: 1 vertical swipe = 1 card transition
+  // Mobile Touch Swipe Handling: 1 Swipe = Exactly 1 Card Transition
   useEffect(() => {
     if (!isMobile) return;
 
     const handleTouchStart = (e: TouchEvent) => {
-      if (!containerRef.current) return;
-      const maxScroll = containerRef.current.offsetHeight - window.innerHeight;
-      // Only active while user is inside the hero scrollytelling section
-      if (window.scrollY > maxScroll + 20) return;
+      // Only active when near top / in hero section
+      if (window.scrollY > 25) return;
 
       touchStartY.current = e.touches[0].clientY;
       touchStartX.current = e.touches[0].clientX;
-      stageAtStartRef.current = currentMobileStageRef.current;
+      touchStartTime.current = Date.now();
+      swipedInGestureRef.current = false;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!containerRef.current) return;
-      const maxScroll = containerRef.current.offsetHeight - window.innerHeight;
-      // If user has scrolled below hero section, allow standard touch scroll completely
-      if (window.scrollY > maxScroll + 20) return;
+      if (window.scrollY > 25) return;
 
       const currentY = e.touches[0].clientY;
       const currentX = e.touches[0].clientX;
       const deltaY = touchStartY.current - currentY;
       const deltaX = touchStartX.current - currentX;
+      const absY = Math.abs(deltaY);
+      const absX = Math.abs(deltaX);
 
-      // Prevent chaotic native scroll jitter inside the sticky video section
-      if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
-        if (e.cancelable) {
-          e.preventDefault();
-        }
+      // In Hero stages 0, 1, 2: prevent native vertical scroll so it never lags or fights
+      if (currentMobileStageRef.current < 3 && absY > 6 && absY > absX) {
+        if (e.cancelable) e.preventDefault();
       }
 
-      // Trigger 1-card transition once swipe passes threshold (28px)
-      if (
-        !isTransitioningRef.current &&
-        Math.abs(deltaY) > 28 &&
-        Math.abs(deltaY) > Math.abs(deltaX)
-      ) {
-        isTransitioningRef.current = true;
+      // If at Stage 3 and swiping DOWN, intercept to go back to Stage 2
+      if (currentMobileStageRef.current === 3 && deltaY < -6 && absY > absX) {
+        if (e.cancelable) e.preventDefault();
+      }
+
+      // Once swipe passes 24px threshold, fire discrete 1-card transition immediately!
+      if (!swipedInGestureRef.current && absY > 24 && absY > absX) {
+        swipedInGestureRef.current = true;
 
         if (deltaY > 0) {
-          // Swipe UP -> Advance to next card or exit hero
-          const nextStage = stageAtStartRef.current + 1;
-          scrollToMobileStage(nextStage);
+          // Swipe UP -> Next card
+          goToMobileStage(currentMobileStageRef.current + 1);
         } else {
-          // Swipe DOWN -> Go back to previous card
-          const prevStage = Math.max(0, stageAtStartRef.current - 1);
-          scrollToMobileStage(prevStage);
+          // Swipe DOWN -> Previous card
+          goToMobileStage(Math.max(0, currentMobileStageRef.current - 1));
         }
-
-        setTimeout(() => {
-          isTransitioningRef.current = false;
-        }, 700);
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!containerRef.current || isTransitioningRef.current) return;
-      const maxScroll = containerRef.current.offsetHeight - window.innerHeight;
-      if (window.scrollY > maxScroll + 20) return;
+      if (window.scrollY > 25) return;
 
-      const endY = e.changedTouches[0].clientY;
-      const endX = e.changedTouches[0].clientX;
-      const deltaY = touchStartY.current - endY;
-      const deltaX = touchStartX.current - endX;
+      // Handle fast flick gesture if touchmove didn't trigger
+      if (!swipedInGestureRef.current) {
+        const elapsed = Date.now() - touchStartTime.current;
+        const endY = e.changedTouches[0].clientY;
+        const endX = e.changedTouches[0].clientX;
+        const deltaY = touchStartY.current - endY;
+        const deltaX = touchStartX.current - endX;
+        const absY = Math.abs(deltaY);
+        const absX = Math.abs(deltaX);
 
-      // Catch quick flick gestures
-      if (Math.abs(deltaY) > 28 && Math.abs(deltaY) > Math.abs(deltaX)) {
-        isTransitioningRef.current = true;
-
-        if (deltaY > 0) {
-          const nextStage = stageAtStartRef.current + 1;
-          scrollToMobileStage(nextStage);
-        } else {
-          const prevStage = Math.max(0, stageAtStartRef.current - 1);
-          scrollToMobileStage(prevStage);
+        if (elapsed < 350 && absY > 20 && absY > absX) {
+          swipedInGestureRef.current = true;
+          if (deltaY > 0) {
+            goToMobileStage(currentMobileStageRef.current + 1);
+          } else {
+            goToMobileStage(Math.max(0, currentMobileStageRef.current - 1));
+          }
         }
-
-        setTimeout(() => {
-          isTransitioningRef.current = false;
-        }, 700);
       }
+
+      swipedInGestureRef.current = false;
     };
 
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
@@ -354,13 +355,18 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isMobile, scrollToMobileStage]);
+  }, [isMobile, goToMobileStage]);
 
   return (
-    <ScrollyContext.Provider value={{ scrollYProgress, smoothProgress }}>
+    <ScrollyContext.Provider
+      value={{
+        scrollYProgress: isMobile ? mobileProgress : scrollYProgress,
+        smoothProgress: activeProgress,
+      }}
+    >
       <div
         ref={containerRef}
-        className="relative h-[450vh] md:h-[550vh] w-full bg-[#050505]"
+        className="relative h-screen md:h-[550vh] w-full bg-[#050505]"
       >
         {/* Sticky Viewport Stage */}
         <div className="sticky top-0 h-screen w-full overflow-hidden">
@@ -386,7 +392,7 @@ export const ScrollyCanvas: React.FC<ScrollyCanvasProps> = ({
               {[0, 1, 2, 3].map((index) => (
                 <button
                   key={index}
-                  onClick={() => scrollToMobileStage(index)}
+                  onClick={() => goToMobileStage(index)}
                   aria-label={`Go to card ${index + 1}`}
                   className={`transition-all duration-300 rounded-full cursor-pointer ${
                     currentMobileStage === index

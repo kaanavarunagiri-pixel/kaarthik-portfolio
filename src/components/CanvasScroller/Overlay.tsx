@@ -29,7 +29,13 @@ export const Overlay: React.FC = () => {
 
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (!el) return;
+    const lenis = (window as any).__lenis;
+    if (lenis) {
+      lenis.scrollTo(el, { duration: 0.85 });
+    } else {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
