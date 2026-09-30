@@ -39,16 +39,16 @@ export const Overlay: React.FC = () => {
       {/* ============================================================ */}
       <motion.div
         style={{ opacity: s1Opacity, y: s1Y }}
-        className="absolute inset-0 flex flex-col justify-between py-24 sm:py-28 px-8 sm:px-14 md:px-20 lg:px-28 xl:px-36"
+        className="absolute inset-0 flex flex-col justify-between py-16 sm:py-24 md:py-28 px-5 sm:px-12 md:px-20 lg:px-28 xl:px-36"
       >
         {/* Top Status Badge */}
         <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-black/60 px-4 py-1.5 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-black/60 px-3.5 py-1 sm:px-4 sm:py-1.5 backdrop-blur-md">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
             </span>
-            <span className="text-[11px] font-mono tracking-widest uppercase text-neutral-300">
+            <span className="text-[10px] sm:text-[11px] font-mono tracking-widest uppercase text-neutral-300">
               AVAILABLE FOR SELECT PROJECTS
             </span>
           </div>
@@ -60,14 +60,14 @@ export const Overlay: React.FC = () => {
         </div>
 
         {/* Center Hero Titles */}
-        <div className="max-w-xl sm:max-w-2xl lg:max-w-3xl space-y-4">
-          <div className="inline-block rounded-md border border-red-500/30 bg-red-950/40 px-3.5 py-1 text-xs font-mono tracking-widest text-red-400 uppercase">
+        <div className="max-w-[calc(100vw-3.5rem)] sm:max-w-2xl lg:max-w-3xl space-y-3 sm:space-y-4">
+          <div className="inline-block rounded-md border border-red-500/30 bg-red-950/40 px-3 py-1 text-[10px] sm:text-xs font-mono tracking-widest text-red-400 uppercase">
             FULL STACK WEB AND APP DEVELOPER
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight text-white leading-none">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight text-white leading-none">
             KAARTHIK
           </h1>
-          <h2 className="text-gradient-red text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight leading-tight">
+          <h2 className="text-gradient-red text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight leading-tight">
             BUILDING NEXT-GEN WEB &amp; MOBILE EXPERIENCES
           </h2>
           <p className="text-xs sm:text-sm md:text-base text-neutral-300 font-light max-w-md lg:max-w-lg leading-relaxed">
@@ -77,12 +77,13 @@ export const Overlay: React.FC = () => {
 
         {/* Bottom Scroll Prompt */}
         <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-neutral-400">
+          <div className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-mono text-neutral-400">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
-            <span>SCROLL DOWN TO ADVANCE</span>
+            <span className="hidden sm:inline">SCROLL DOWN TO ADVANCE</span>
+            <span className="sm:hidden">SWIPE TO ADVANCE</span>
           </div>
           <div className="animate-bounce text-neutral-400">
-            <ChevronDown className="h-5 w-5" />
+            <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
       </motion.div>
@@ -92,28 +93,28 @@ export const Overlay: React.FC = () => {
       {/* ============================================================ */}
       <motion.div
         style={{ opacity: s2Opacity, y: s2Y }}
-        className="absolute inset-0 flex flex-col justify-center items-start py-20 px-8 sm:px-14 md:px-20 lg:px-28 xl:px-36"
+        className="absolute inset-0 flex flex-col justify-center items-start py-16 sm:py-20 px-4 sm:px-10 md:px-20 lg:px-28 xl:px-36"
       >
-        <div className="max-w-2xl space-y-4 rounded-2xl border border-red-500/20 bg-black/60 p-6 sm:p-10 backdrop-blur-xl shadow-[0_0_50px_rgba(255,30,39,0.15)]">
-          <div className="inline-flex items-center gap-2 text-xs font-mono tracking-widest text-red-400 uppercase">
-            <Code2 className="h-4 w-4" />
+        <div className="max-w-[calc(100vw-3.5rem)] sm:max-w-2xl space-y-3.5 sm:space-y-4 rounded-2xl border border-red-500/20 bg-black/65 p-5 sm:p-8 md:p-10 backdrop-blur-xl shadow-[0_0_50px_rgba(255,30,39,0.15)]">
+          <div className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-mono tracking-widest text-red-400 uppercase">
+            <Code2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>ENGINEERING PHILOSOPHY</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black uppercase text-white tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase text-white tracking-tight leading-tight">
             WEB &amp; APP ARCHITECTURE <br />
             <span className="text-gradient-flame">BUILT FOR SCALE.</span>
           </h2>
-          <p className="text-sm sm:text-base text-neutral-300 font-light leading-relaxed">
+          <p className="text-xs sm:text-base text-neutral-300 font-light leading-relaxed">
             From intuitive client-facing web portals to high-reliability mobile apps, every system is engineered with speed, clean architecture, and seamless user experiences.
           </p>
-          <div className="pt-2 flex flex-wrap gap-2 text-xs font-mono">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-neutral-300">
+          <div className="pt-1 flex flex-wrap gap-2 text-[11px] sm:text-xs font-mono">
+            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-neutral-300">
               ⚡ Cross-Platform Mobile
             </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-neutral-300">
+            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-neutral-300">
               ⚡ Scalable Web Systems
             </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-neutral-300">
+            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-neutral-300">
               ⚡ Clean Code &amp; API Design
             </span>
           </div>
@@ -125,25 +126,25 @@ export const Overlay: React.FC = () => {
       {/* ============================================================ */}
       <motion.div
         style={{ opacity: s3Opacity, y: s3Y }}
-        className="absolute inset-0 flex flex-col justify-center items-end py-20 px-8 sm:px-14 md:px-20 lg:px-28 xl:px-36 text-left"
+        className="absolute inset-0 flex flex-col justify-center items-start sm:items-end py-16 sm:py-20 px-4 sm:px-10 md:px-20 lg:px-28 xl:px-36 text-left"
       >
-        <div className="max-w-2xl space-y-4 rounded-2xl border border-red-500/20 bg-black/60 p-6 sm:p-10 backdrop-blur-xl shadow-[0_0_50px_rgba(255,30,39,0.15)] text-left">
-          <div className="inline-flex items-center gap-2 text-xs font-mono tracking-widest text-red-400 uppercase">
-            <Sparkles className="h-4 w-4" />
+        <div className="max-w-[calc(100vw-3.5rem)] sm:max-w-2xl space-y-3.5 sm:space-y-4 rounded-2xl border border-red-500/20 bg-black/65 p-5 sm:p-8 md:p-10 backdrop-blur-xl shadow-[0_0_50px_rgba(255,30,39,0.15)] text-left">
+          <div className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-mono tracking-widest text-red-400 uppercase">
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>FULL STACK CORE</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black uppercase text-white tracking-tight leading-tight text-left">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase text-white tracking-tight leading-tight text-left">
             VERSATILE TECH. <br />
             <span className="text-gradient-red">SEAMLESS DELIVERY.</span>
           </h2>
-          <p className="text-sm sm:text-base text-neutral-300 font-light leading-relaxed text-left">
+          <p className="text-xs sm:text-base text-neutral-300 font-light leading-relaxed text-left">
             Delivering robust end-to-end solutions with modern web frameworks, mobile SDKs, and rock-solid database backends.
           </p>
-          <div className="pt-2 flex flex-wrap justify-start gap-2 text-xs font-mono">
+          <div className="pt-1 flex flex-wrap justify-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-mono">
             {["Next.js / React", "Flutter", "React Native", "Node.js", "TypeScript", "Tailwind CSS", "PostgreSQL", "MongoDB"].map((tech) => (
               <span
                 key={tech}
-                className="rounded-full border border-red-500/30 bg-red-950/30 px-3 py-1 text-red-200"
+                className="rounded-full border border-red-500/30 bg-red-950/30 px-2.5 py-0.5 sm:px-3 sm:py-1 text-red-200"
               >
                 {tech}
               </span>
@@ -157,33 +158,33 @@ export const Overlay: React.FC = () => {
       {/* ============================================================ */}
       <motion.div
         style={{ opacity: s4Opacity, y: s4Y }}
-        className="absolute inset-0 flex flex-col justify-center items-center text-center py-20 px-8 sm:px-14 md:px-20 lg:px-28 xl:px-36"
+        className="absolute inset-0 flex flex-col justify-center items-center text-center py-16 sm:py-20 px-4 sm:px-10 md:px-20 lg:px-28 xl:px-36"
       >
-        <div className="max-w-2xl space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-red-950/40 px-4 py-1 text-xs font-mono uppercase tracking-widest text-red-400">
-            <Flame className="h-3.5 w-3.5" />
+        <div className="max-w-[calc(100vw-3.5rem)] sm:max-w-2xl space-y-4 sm:space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-red-950/40 px-3.5 py-1 text-[11px] sm:text-xs font-mono uppercase tracking-widest text-red-400">
+            <Flame className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             <span>SCROLL MILESTONE COMPLETED</span>
           </div>
 
-          <h2 className="text-4xl sm:text-6xl font-black uppercase tracking-tight text-white">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight text-white">
             EXPLORE KAARTHIK&apos;S <br />
             <span className="text-gradient-flame">PORTFOLIO.</span>
           </h2>
 
-          <p className="text-sm sm:text-base text-neutral-300 font-light max-w-md mx-auto">
+          <p className="text-xs sm:text-sm md:text-base text-neutral-300 font-light max-w-md mx-auto">
             Explore projects worked in, launch the interactive developer terminal, or inspect technical capabilities.
           </p>
 
-          <div className="pt-4 flex flex-wrap justify-center items-center gap-3 pointer-events-auto">
+          <div className="pt-2 sm:pt-4 flex flex-wrap justify-center items-center gap-3 pointer-events-auto">
             <button
               onClick={() => scrollTo("portfolio-projects")}
-              className="rounded-full bg-gradient-to-r from-red-600 to-red-800 px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_0_25px_rgba(255,30,39,0.5)] hover:scale-105 transition-all cursor-pointer"
+              className="rounded-full bg-gradient-to-r from-red-600 to-red-800 px-5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_0_25px_rgba(255,30,39,0.5)] hover:scale-105 transition-all cursor-pointer"
             >
               Explore Projects
             </button>
             <button
               onClick={() => scrollTo("terminal-section")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/70 px-5 py-2.5 text-xs sm:text-sm font-mono text-neutral-200 hover:border-red-500 hover:text-white transition-all cursor-pointer backdrop-blur-md"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/70 px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-mono text-neutral-200 hover:border-red-500 hover:text-white transition-all cursor-pointer backdrop-blur-md"
             >
               <Terminal className="h-3.5 w-3.5 text-red-400" />
               <span>Launch Terminal</span>

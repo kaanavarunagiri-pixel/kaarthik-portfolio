@@ -20,6 +20,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
       touchMultiplier: 1.5,
     });
 
+    (window as any).__lenis = lenis;
     lenis.scrollTo(0, { immediate: true });
 
     let rafId: number;
@@ -32,6 +33,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
     return () => {
       cancelAnimationFrame(rafId);
       lenis.destroy();
+      delete (window as any).__lenis;
     };
   }, []);
 
