@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
+@theme {
+  --color-crimson: #ff1e27;
+  --color-crimson-dark: #99000a;
+  --color-flame: #ff5500;
+  --color-amber-fire: #ffaa00;
+  --color-obsidian: #050505;
+  --color-carbon: #0d0d0d;
+  --color-carbon-card: rgba(13, 13, 13, 0.75);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #050505;
+  --foreground: #f5f5f5;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #050505;
+  color: #f5f5f5;
+  overflow-x: hidden;
+  selection-background-color: #ff1e27;
+  selection-color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+::selection {
+  background: #ff1e27;
+  color: #ffffff;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+::-webkit-scrollbar-thumb {
+  background: #260a0c;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 30, 39, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff1e27;
+  box-shadow: 0 0 10px #ff1e27;
+}
+
+/* Glow & Glass Utilities */
+.glow-red {
+  box-shadow: 0 0 30px rgba(255, 30, 39, 0.35);
+}
+
+.glow-red-sm {
+  box-shadow: 0 0 15px rgba(255, 30, 39, 0.25);
+}
+
+.glow-flame {
+  box-shadow: 0 0 40px rgba(255, 85, 0, 0.3);
+}
+
+.text-gradient-red {
+  background: linear-gradient(135deg, #ffffff 20%, #ff5500 65%, #ff1e27 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-flame {
+  background: linear-gradient(135deg, #ffaa00 0%, #ff5500 50%, #ff1e27 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-card {
+  background: rgba(12, 12, 12, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 30, 39, 0.4);
+}
+
+.glass-hud {
+  background: rgba(8, 8, 8, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 30, 39, 0.2);
+}
+
+/* Subtle Animated Background Grid */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
